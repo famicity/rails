@@ -719,6 +719,11 @@ class FormHelperTest < ActionView::TestCase
     assert_dom_equal(expected, search_field("contact", "notes_query"))
   end
 
+  def test_search_field_with_onsearch_value
+    expected = %{<input onsearch="true" type="search" name="contact[notes_query]" id="contact_notes_query" incremental="true" />}
+    assert_dom_equal(expected, search_field("contact", "notes_query", onsearch: true))
+  end
+
   def test_telephone_field
     expected = %{<input id="user_cell" name="user[cell]" type="tel" />}
     assert_dom_equal(expected, telephone_field("user", "cell"))
@@ -1510,6 +1515,20 @@ class FormHelperTest < ActionView::TestCase
     end
 
     assert_dom_equal expected, output_buffer
+  end
+
+  def test_form_tags_do_not_call_private_properties_on_form_object
+    obj = Class.new do
+      private
+
+      def private_property
+        raise "This method should not be called."
+      end
+    end.new
+
+    form_for(obj, as: "other_name", url: '/', html: { id: "edit-other-name" }) do |f|
+      assert_raise(NoMethodError) { f.hidden_field(:private_property) }
+    end
   end
 
   def test_form_for_with_method_as_part_of_html_options
